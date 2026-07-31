@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com; img-src 'self' data:; frame-src 'self' blob:;">
+<meta name="referrer" content="no-referrer">
+<title>Developer Tools — Vintage Blueprint Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Roboto+Mono:wght@400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:#0A1628;color:#B0BEC5;font-family:'Roboto Mono',monospace;font-weight:400;min-height:100vh;overflow-x:hidden}
+h1,h2,h3{font-family:'Share Tech Mono',monospace;color:#E0F7FA}
+h1{font-size:2.5rem;letter-spacing:2px}
+h2{font-size:1.5rem;margin-bottom:20px;color:#4FC3F7;border-bottom:1px solid #0F2238;padding-bottom:8px}
+.header-title{font-family:'Share Tech Mono',monospace;color:#E0F7FA}
+.header{background:#060E1A;padding:20px 30px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #00A86B;position:relative;z-index:10;flex-wrap:wrap;gap:10px}
+.header-left{display:flex;align-items:center;gap:15px}
+.header-badge{font-size:10px;color:#4FC3F7;background:rgba(79,195,247,0.1);border:1px solid #4FC3F7;padding:2px 8px;border-radius:2px;letter-spacing:1px;text-transform:uppercase}
+.header-title{font-size:1.8rem;color:#E0F7FA}
+.header-title::after{content:'\258c';animation:blink 1s step-end infinite;color:#00A86B;margin-left:4px}
+@keyframes blink{50%{opacity:0}}
+#three-container{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.main-content{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:0 20px 80px}
+.tab-nav{display:flex;gap:0;margin:20px 0 30px;border-bottom:1px solid #0F2238;flex-wrap:wrap;background:#060E1A;padding:0 10px;border-radius:4px 4px 0 0}
+.tab-btn{background:transparent;border:none;padding:12px 20px;color:#4FC3F7;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;position:relative}
+.tab-btn:hover{background:rgba(0,168,107,0.08);color:#E0F7FA}
+.tab-btn.active{background:#00A86B;color:#000;border-bottom:2px solid #00A86B}
+.tab-btn[data-tooltip]:hover::after{content:attr(data-tooltip);position:absolute;bottom:-28px;left:50%;transform:translateX(-50%);background:#060E1A;color:#00A86B;padding:4px 10px;font-size:11px;border:1px solid #00A86B;white-space:nowrap;z-index:100;font-family:'Roboto Mono',monospace}
+.tool-section{display:none}
+.tool-section.active{display:block}
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(450px,1fr));gap:20px}
+.tool-card{background:#0F2238;border-left:4px solid #00A86B;border-radius:4px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,0.3)}
+.tool-card h3{font-family:'Share Tech Mono',monospace;color:#4FC3F7;font-size:1.1rem;margin-bottom:12px;letter-spacing:1px}
+.tool-card label{display:block;color:#B0BEC5;font-size:12px;margin-bottom:4px;margin-top:10px;font-family:'Inter',sans-serif}
+.tool-card label:first-of-type{margin-top:0}
+.tool-input,.tool-textarea,.tool-select{width:100%;background:#060E1A;border:1px solid #0F2238;color:#E0F7FA;padding:8px 12px;font-family:'Roboto Mono',monospace;font-size:13px;border-radius:3px;transition:border .2s}
+.tool-input:focus,.tool-textarea:focus{border-color:#4FC3F7;outline:none;box-shadow:0 0 8px rgba(79,195,247,0.2)}
+.tool-textarea{min-height:80px;resize:vertical}
+.tool-output{background:#060E1A;border:1px solid #0F2238;color:#00FF88;padding:10px 12px;font-family:'Roboto Mono',monospace;font-size:12px;border-radius:3px;margin-top:10px;min-height:40px;max-height:200px;overflow:auto;white-space:pre-wrap;word-break:break-all}
+.tool-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.btn{background:transparent;border:1px solid #00A86B;color:#00A86B;padding:6px 16px;font-family:'Roboto Mono',monospace;font-size:12px;cursor:pointer;border-radius:3px;transition:all .2s}
+.btn:hover{background:#00A86B;color:#000}
+.btn-copy{background:transparent;border:1px solid #4FC3F7;color:#4FC3F7}
+.btn-copy:hover{background:#4FC3F7;color:#000}
+.btn-small{padding:4px 10px;font-size:11px}
+.tool-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.tool-row label{margin-top:0}
+.tool-row input,.tool-row select{flex:1;min-width:60px}
+.ad-box{background:#0D1E33;border:1px solid #0F2238;padding:20px;margin:20px 0;text-align:center;position:relative;font-family:'Inter',sans-serif;font-size:13px;color:#4FC3F7}
+.ad-corner{position:absolute;font-size:16px;color:#00A86B;font-family:monospace;line-height:1}
+.ad-tl{top:4px;left:6px}.ad-tr{top:4px;right:6px}.ad-bl{bottom:4px;left:6px}.ad-br{bottom:4px;right:6px}
+#self-test{background:#060E1A;border:2px solid #00A86B;padding:20px;margin:30px 0;border-radius:4px}
+#self-test h2{color:#00A86B;border-bottom-color:#00A86B}
+#self-test-results{color:#00FF88;font-size:12px;line-height:1.8;max-height:400px;overflow:auto}
+.test-pass{color:#00A86B}.test-fail{color:#FF4444}.test-info{color:#4FC3F7}
+.footer{background:#060E1A;border-top:2px solid #00A86B;padding:30px;text-align:center;position:relative;z-index:1;color:#4FC3F7;font-size:12px;font-family:'Inter',sans-serif}
+.footer a{color:#00A86B;text-decoration:none}
+.footer a:hover{text-decoration:underline}
+.diff-added{background:rgba(0,168,107,0.2);color:#00A86B}
+.diff-removed{background:rgba(255,68,68,0.2);color:#FF4444}
+.color-swatch{display:inline-block;width:30px;height:30px;border-radius:3px;border:1px solid #0F2238;vertical-align:middle;margin-left:8px}
+.output-sm{max-height:120px}.output-lg{max-height:300px}
+.tool-checkbox{display:inline-flex;align-items:center;gap:6px;margin-right:12px;color:#B0BEC5;font-size:12px;font-family:'Inter',sans-serif}
+.tool-checkbox input[type="checkbox"]{accent-color:#00A86B}
+.tool-checkbox input[type="radio"]{accent-color:#00A86B}
+.sub-tabs{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap}
+.sub-tab{padding:4px 12px;background:transparent;border:1px solid #0F2238;color:#B0BEC5;font-family:'Roboto Mono',monospace;font-size:11px;cursor:pointer;border-radius:2px}
+.sub-tab.active{background:#00A86B;color:#000;border-color:#00A86B}
+.sub-tab:hover:not(.active){border-color:#4FC3F7;color:#4FC3F7}
+.toast{position:fixed;bottom:30px;right:30px;background:#00A86B;color:#000;padding:10px 20px;font-family:'Inter',sans-serif;font-size:13px;border-radius:4px;z-index:9999;opacity:0;transform:translateY(20px);transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+.markdown-body{background:#060E1A;border:1px solid #0F2238;padding:15px;color:#E0F7FA;font-size:13px;line-height:1.6;border-radius:3px;margin-top:10px;max-height:300px;overflow:auto}
+.markdown-body h1,.markdown-body h2,.markdown-body h3,.markdown-body h4{color:#4FC3F7;margin:10px 0 5px;font-family:'Share Tech Mono',monospace}
+.markdown-body h1{font-size:1.3rem}.markdown-body h2{font-size:1.1rem}.markdown-body h3{font-size:1rem}
+.markdown-body p{margin:5px 0}.markdown-body code{background:rgba(0,168,107,0.15);color:#00A86B;padding:1px 4px;border-radius:2px;font-size:12px}
+.markdown-body pre{background:#0A1628;padding:10px;border-left:2px solid #00A86B;overflow-x:auto;margin:8px 0}
+.markdown-body pre code{background:none;padding:0}
+.markdown-body ul,.markdown-body ol{padding-left:20px}
+.markdown-body li{margin:3px 0}.markdown-body strong{color:#E0F7FA}
+.markdown-body blockquote{border-left:3px solid #4FC3F7;padding-left:10px;margin:8px 0;color:#B0BEC5}
+.markdown-body hr{border:none;border-top:1px solid #0F2238;margin:10px 0}
+.markdown-body a{color:#4FC3F7}
+.markdown-body table{border-collapse:collapse;width:100%;margin:8px 0}
+.markdown-body td,.markdown-body th{border:1px solid #0F2238;padding:6px 10px;text-align:left}
+.markdown-body th{background:#0A1628;color:#4FC3F7}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:#060E1A}
+::-webkit-scrollbar-thumb{background:#0F2238;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#00A86B}
+@media(max-width:768px){.tools-grid{grid-template-columns:1fr}.header-title{font-size:1.3rem}.tab-btn{padding:8px 12px;font-size:11px}}
+</style>
+</head>
+<body>
+<div id="three-container"></div>
+<header class="header">
+<div class="header-left">
+<span class="header-badge">v1.0</span>
+<h1 class="header-title">Developer Tools</h1>
+</div>
+<div style="font-size:12px;color:#4FC3F7;font-family:'Inter',sans-serif">BLUEPRINT TERMINAL // 1969</div>
+</header>
+<div class="main-content">
+<nav class="tab-nav" id="tabNav">
+<button class="tab-btn active" data-tab="text" data-tooltip="String manipulation tools">Text</button>
+<button class="tab-btn" data-tab="json" data-tooltip="JSON processing tools">JSON</button>
+<button class="tab-btn" data-tab="encode" data-tooltip="Encoding / decoding tools">Encode</button>
+<button class="tab-btn" data-tab="generate" data-tooltip="Generators (UUID, lorem, password)">Generate</button>
+<button class="tab-btn" data-tab="convert" data-tooltip="Convert between formats">Convert</button>
+<button class="tab-btn" data-tab="code" data-tooltip="Code utilities">Code</button>
+<button class="tab-btn" data-tab="network" data-tooltip="Network / utility tools">Network</button>
+<button class="tab-btn" data-tab="all" data-tooltip="Show all tools">All</button>
+</nav>
+<div class="ad-box">
+<span class="ad-corner ad-tl">[</span>
+<span class="ad-corner ad-tr">]</span>
+<span class="ad-corner ad-bl">[</span>
+<span class="ad-corner ad-br">]</span>
+<div style="padding:10px 0">
+<div style="font-size:10px;color:#B0BEC5;margin-bottom:4px;text-transform:uppercase;letter-spacing:2px">Advertisement</div>
+<div>Your Ad Here — Blueprint Terminal Edition</div>
+<div style="font-size:10px;color:#B0BEC5;margin-top:4px">reach developers &bull; 1960s aesthetic &bull; premium placement</div>
+</div>
+</div>
+<div class="tool-section active" id="section-text">
+<h2>■ Text Tools</h2>
+<div class="tools-grid">
+<div class="tool-card">
+<h3>Case Converter</h3>
+<div class="sub-tabs">
+<button class="sub-tab active" data-case="upper">UPPER</button>
+<button class="sub-tab" data-case="lower">lower</button>
+<button class="sub-tab" data-case="title">Title</button>
+<button class="sub-tab" data-case="sentence">Sentence</button>
+<button class="sub-tab" data-case="camel">camelCase</button>
+<button class="sub-tab" data-case="snake">snake_case</button>
+<button class="sub-tab" data-case="kebab">kebab-case</button>
+</div>
+<label>Input text</label>
+<textarea class="tool-textarea" id="caseInput" maxlength="10000" placeholder="Enter text to convert...">hello world from dev tools</textarea>
+<div class="tool-actions">
+<button class="btn" onclick="convertCase()">Convert</button>
+<button class="btn btn-copy" onclick="copyOutput('caseOutput')">Copy</button>
+</div>
+<div class="tool-output" id="caseOutput">Hello World From Dev Tools</div>
+</div>
+<div class="tool-card">
+<h3>String Counter</h3>
+<label>Input text</label>
+<textarea class="tool-textarea" id="counterInput" maxlength="50000" placeholder="Enter text to analyze..." oninput="updateStringCounter()">Hello, World! This is a test.</textarea>
+<div class="tool-output output-sm" id="counterOutput">Chars: 0 | Words: 0 | Lines: 0 | Bytes: 0 | Unique: 0</div>
+</div>
+<div class="tool-card">
+<h3>Text Diff</h3>
+<label>Original text</label>
+<textarea class="tool-textarea" id="diffInputA" maxlength="10000" placeholder="Original...">Hello World&#x0a;Line two&#x0a;Line three</textarea>
+<label>Modified text</label>
+<textarea class="tool-textarea" id="diffInputB" maxlength="10000" placeholder="Modified...">Hello World&#x0a;Line two modified&#x0a;Line three&#x0a;Line four</textarea>
+<div class="tool-actions">
+<button class="btn" onclick="computeDiff()">Compare</button>
+<button class="btn btn-copy" onclick="copyOutput('diffOutput')">Copy</button>
+</div>
+<div class="tool-output output-lg" id="diffOutput"></div>
+</div>
+<div class="tool-card">
+<h3>HTML Entity Encode / Decode</h3>
+<div class="tool-row">
+<button class="btn btn-small sub-tab active" id="htmlEntityEncodeTab" onclick="setHtmlEntityMode('encode')">Encode</button>
+<button class="btn btn-small sub-tab" id="htmlEntityDecodeTab" onclick="setHtmlEntityMode('decode')">Decode</button>
+</div>
+<textarea class="tool-textarea" id="htmlEntityInput" maxlength="10000" placeholder="Enter text...">&lt;div class=&quot;main&quot;&gt;Hello &amp; Welcome&lt;/div&gt;</textarea>
+<div class="tool-actions">
+<button class="btn" onclick="processHtmlEntity()">Process</button>
+<button class="btn btn-copy" onclick="copyOutput('htmlEntityOutput')">Copy</button>
+</div>
+<div class="tool-output" id="htmlEntityOutput"></div>
+</div>
+<div class="tool-card">
+<h3>Find &amp; Replace</h3>
+<label>Input text</label>
+<textarea class="tool-textarea" id="findReplaceInput" maxlength="10000" placeholder="Enter text...">The quick brown fox jumps over the lazy dog. The fox is quick.</textarea>
+<label>Find</label>
+<input class="tool-input" id="findPattern" value="fox" placeholder="Text or regex pattern">
+<label>Replace with</label>
+<input class="tool-input" id="replaceText" value="cat" placeholder="Replacement">
+<label class="tool-checkbox"><input type="checkbox" id="findRegex"> Use regex</label>
+<div class="tool-actions">
+<button class="btn" onclick="findAndReplace()">Replace</button>
+<button class="btn" onclick="countMatches()">Count Matches</button>
+<button class="btn btn-copy" onclick="copyOutput('findReplaceOutput')">Copy</button>
+</div>
+<div class="tool-output" id="findReplaceOutput"></div>
+</div>
+</div></div>
+<div class="tool-section" id="section-json">
+<h2>■ JSON Tools</h2>
+<div class="tools-grid">
+<div class="tool-card">
+<h3>JSON Formatter</h3>
+<textarea class="tool-textarea" id="jsonFormatInput" maxlength="50000" placeholder='Paste JSON...'>{"name":"John","age":30,"city":"New York","hobbies":["reading","coding","chess"]}</textarea>
+<div class="tool-actions">
+<button class="btn" onclick="formatJson()">Format</button>
+<button class="btn btn-copy" onclick="copyOutput('jsonFormatOutput')">Copy</button>
+</div>
+<div class="tool-output output-lg" id="jsonFormatOutput"></div>
+</div>
+<div class="tool-card">
+<h3>JSON Minifier</h3>
+<textarea class="tool-textarea" id="jsonMinifyInput" maxlength="50000" placeholder='Paste JSON...'>{
+  "name": "John",
+  "age": 30,
+  "city": "New York"
+}</textarea>
+<div class="tool-actions">
+<button class="btn" onclick="minifyJson()">Minify</button>
+<button class="btn btn-copy" onclick="copyOutput('jsonMinifyOutput')">Copy</button>
+</div>
+<div class="tool-output output-sm" id="jsonMinifyOutput"></div>
+</div>
+<div class="tool-card">
+<h3>JSON Validator</h3>
+<textarea class="tool-textarea" id="jsonValidateInput" maxlength="50000" placeholder='Paste JSON...'>{"name": "John", "age": 30}</textarea>
+<div class="tool-actions">
+<button class="btn" onclick="validateJson()">Validate</button>
+</div>
+<div class="tool-output" id="jsonValidateOutput"></div>
+</div>
+<div class="tool-card">
+<h3>JSON to CSV</h3>
+<textarea class="tool-textarea" id="jsonCsvInput" maxlength="50000" placeholder='Array of objects...'>[{"name":"Alice","age":30,"city":"NYC"},{"name":"Bob","age":25,"city":"LA"}]</textarea>
+<div class="tool-actions">
+<button class="btn" onclick="jsonToCsv()">Convert</button>
+<button class="btn btn-copy" onclick="copyOutput('jsonCsvOutput')">Copy</button>
+<button class="btn" onclick="downloadCsv()">Download</button>
+</div>
+<div class="tool-output output-lg" id="jsonCsvOutput"></div>
+</div>
+</div></div>
+<div class="tool-section" id="section-encode">
+<h2>■ Encode / Decode</h2>
+<div class="tools-grid">
+<div class="tool-card">
+<h3>Base64 Encode / Decode</h3>
+<div class="tool-row">
+<button class="btn btn-small sub-tab active" id="b64EncodeTab" onclick="setBase64Mode('encode')">Encode</button>
+<button class="btn btn-small sub-tab" id="b64DecodeTab" onclick="setBase64Mode('decode')">Decode</button>
+</div>
+<label>Input</label>
+<textarea class="tool-textarea" id="base64Input" maxlength="10000" placeholder="Enter text...">Hello World!</textarea>
+<label class="tool-checkbox"><input type="checkbox" id="base64FileMode"> File mode</label>
+<div style="display:none" id="base64FileRow"><input type="file" id="base64FileInput" onchange="handleBase64File(this.files[0])"></div>
+<div class="tool-actions">
+<button class="btn" onclick="processBase64()">Process</button>
+<button class="btn btn-copy" onclick="copyOutput('base64Output')">Copy</button>
+</div>
+<div class="tool-output" id="base64Output"></div>
+</div>
+<div class="tool-card">
+<h3>URL Encode / Decode</h3>
+<div class="tool-row">
+<button class="btn btn-small sub-tab active" id="urlEncTab" onclick="setUrlMode('encode')">Encode</button>
+<button class="btn btn-small sub-tab" id="urlDecTab" onclick="setUrlMode('decode')">Decode</button>
+</div>
+<textarea class="tool-textarea" id="urlInput" maxlength="10000" placeholder="Enter URL or text...">https://example.com?name=John Doe&city=New York</textarea>
+<div class="tool-actions">
+<button class="btn" onclick="processUrl()">Process</button>
+<button class="btn btn-copy" onclick="copyOutput('urlOutput')">Copy</button>
+</div>
+<div class="tool-output" id="urlOutput"></div>
+</div>
+<div class="tool-card">
+<h3>Hex Encode / Decode</h3>
+<div class="tool-row">
+<button class="btn btn-small sub-tab active" id="hexEncTab" onclick="setHexMode('encode')">Encode</button>
+<button class="btn btn-small sub-tab" id="hexDecTab" onclick="setHexMode('decode')">Decode</button>
+</div>
+<textarea class="tool-textarea" id="hexInput" maxlength="10000" placeholder="Enter text...">Hello World</textarea>
+<div class="tool-actions">
+<button class="btn" onclick="processHex()">Process</button>
+<button class="btn btn-copy" onclick="copyOutput('hexOutput')">Copy</button>
+</div>
+<div class="tool-output" id="hexOutput"></div>
+</div>
+<div class="tool-card">
+<h3>HTML Entity Encode / Decode</h3>
+<div class="tool-row">
+<button class="btn btn-small sub-tab active" id="htmlEntEncTab2" onclick="setHtmlEntityMode2('encode')">Encode</button>
+<button class="btn btn-small sub-tab" id="htmlEntDecTab2" onclick="setHtmlEntityMode2('decode')">Decode</button>
+</div>
+<textarea class="tool-textarea" id="htmlEntityInput2" maxlength="10000" placeholder="Enter text...">&lt;div&gt;Hello &amp; Welcome&lt;/div&gt;</textarea>
+<div class="tool-actions">
+<button class="btn" onclick="processHtmlEntity2()">Process</button>
+<button class="btn btn-copy" onclick="copyOutput('htmlEntityOutput2')">Copy</button>
+</div>
+<div class="tool-output" id="htmlEntityOutput2"></div>
+</div>
+</div></div>
+<div class="tool-section" id="section-generate">
+<h2>■ Generate</h2>
+<div class="tools-grid">
+<div class="tool-card">
+<h3>UUID v4 Generator</h3>
+<label>Count</label>
+<select class="tool-select" id="uuidCount"><option value="1">1</option><option value="5" selected>5</option><option value="10">10</option></select>
+<div class="tool-actions">
+<button class="btn" onclick="generateUuid()">Generate</button>
+<button class="btn btn-copy" onclick="copyOutput('uuidOutput')">Copy</button>
+</div>
+<div class="tool-output" id="uuidOutput"></div>
+</div>
+<div class="tool-card">
+<h3>Lorem Ipsum Generator</h3>
+<label>Type</label>
+<select class="tool-select" id="loremType"><option value="paragraphs">Paragraphs</option><option value="sentences">Sentences</option><option value="words">Words</option></select>
+<label>Count</label>
+<input class="tool-input" type="number" id="loremCount" value="3" min="1" max="50">
+<div class="tool-actions">
+<button class="btn" onclick="generateLorem()">Generate</button>
+<button class="btn btn-copy" onclick="copyOutput('loremOutput')">Copy</button>
+</div>
+<div class="tool-output output-lg" id="loremOutput"></div>
+</div>
+<div class="tool-card">
+<h3>Password Generator</h3>
+<label>Length</label>
+<input class="tool-input" type="number" id="pwLength" value="16" min="4" max="128">
+<div style="margin-top:8px">
+<label class="tool-checkbox"><input type="checkbox" id="pwUpper" checked> Uppercase</label>
+<label class="tool-checkbox"><input type="checkbox" id="pwLower" checked> Lowercase</label>
+<label class="tool-checkbox"><input type="checkbox" id="pwDigits" checked> Digits</label>
+<label class="tool-checkbox"><input type="checkbox" id="pwSpecial" checked> Special</label>
+</div>
+<div class="tool-actions">
+<button class="btn" onclick="generatePassword()">Generate</button>
+<button class="btn btn-copy" onclick="copyOutput('pwOutput')">Copy</button>
+</div>
+<div class="tool-output" id="pwOutput"></div>
+</div>
+<div class="tool-card">
+<h3>Hash Generator</h3>
+<label>Input text</label>
+<textarea class="tool-textarea" id="hashInput" maxlength="10000" placeholder="Enter text to hash...">Hello World</textarea>
+<div class="tool-actions">
+<button class="btn" onclick="generateHash()" id="hashBtn">Generate SHA-256</button>
+<button class="btn btn-copy" onclick="copyOutput('hashOutput')">Copy</button>
+</div>
+<div class="tool-output" id="hashOutput"></div>
+</div>
+</div></div>
+<div class="tool-section" id="section-convert">
+<h2>■ Convert</h2>
+<div class="tools-grid">
+<div class="tool-card">
+<h3>Number Base Converter</h3>
+<label>Decimal</label>
+<input class="tool-input" id="numDecimal" type="text" value="42" oninput="updateNumberBases('decimal')" placeholder="Decimal">
+<label>Binary</label>
+<input class="tool-input" id="numBinary" type="text" value="101010" oninput="updateNumberBases('binary')" placeholder="Binary">
+<label>Octal</label>
+<input class="tool-input" id="numOctal" type="text" value="52" oninput="updateNumberBases('octal')" placeholder="Octal">
+<label>Hexadecimal</label>
+<input class="tool-input" id="numHex" type="text" value="2a" oninput="updateNumberBases('hex')" placeholder="Hexadecimal">
+</div>
+<div class="tool-card">
+<h3>Unix Timestamp Converter</h3>
+<label>Unix Timestamp (seconds)</label>
+<input class="tool-input" type="text" id="tsInput" value="1700000000" oninput="timestampToDate()">
+<div class="tool-actions">
+<button class="btn" onclick="timestampToDate()">→ Date</button>
+<button class="btn" onclick="dateToTimestamp()">Date → Timestamp</button>
+<button class="btn btn-copy" onclick="copyOutput('tsOutput')">Copy</button>
+</div>
+<div class="tool-output" id="tsOutput"></div>
+<label style="margin-top:10px">Or enter a date:</label>
+<input class="tool-input" type="datetime-local" id="tsDateInput" onchange="dateToTimestamp()">
+</div>
+<div class="tool-card">
+<h3>Color Converter</h3>
+<label>Enter HEX, RGB, or HSL</label>
+<input class="tool-input" id="colorInput" value="#00A86B" placeholder="#00A86B or rgb(0,168,107) or hsl(158,100%,33%)" oninput="convertColor()">
+<div class="tool-row">
+<span class="color-swatch" id="colorSwatch" style="background:#00A86B"></span>
+</div>
+<div class="tool-output output-sm" id="colorOutput"></div>
+</div>
+<div class="tool-card">
+<h3>CSV ↔ JSON Converter</h3>
+<div class="tool-row">
+<button class="btn btn-small sub-tab active" id="csvToJsonTab" onclick="setCsvMode('csv2json')">CSV → JSON</button>
+<button class="btn btn-small sub-tab" id="jsonToCsvTab" onclick="setCsvMode('json2csv')">JSON → CSV</button>
+</div>
+<textarea class="tool-textarea" id="csvInput" maxlength="50000" placeholder="CSV or JSON...">name,age,city&#x0a;Alice,30,NYC&#x0a;Bob,25,LA</textarea>
+<div class="tool-actions">
+<button class="btn" onclick="convertCsvJson()">Convert</button>
+<button class="btn btn-copy" onclick="copyOutput('csvOutput')">Copy</button>
+</div>
+<div class="tool-output output-lg" id="csvOutput"></div>
+</div>
+</div></div>
+<div class="tool-section" id="section-code">
+<h2>■ Code Tools</h2>
+<div class="tools-grid">
+<div class="tool-card">
+<h3>JS Minifier</h3>
+<textarea class="tool-textarea" id="jsMinInput" maxlength="50000" placeholder="Paste JavaScript...">// comment
+function hello(name) {
+  console.log("Hello, " + name);
+  /* multi line */
+  return true;
+}</textarea>
+<div class="tool-actions">
+<button class="btn" onclick="minifyJS()">Minify</button>
+<button class="btn btn-copy" onclick="copyOutput('jsMinOutput')">Copy</button>
+</div>
+<div class="tool-output output-lg" id="jsMinOutput"></div>
+</div>
+<div class="tool-card">
+<h3>CSS Minifier</h3>
+<textarea class="tool-textarea" id="cssMinInput" maxlength="50000" placeholder="Paste CSS...">/* My styles */
+body {
+  background: #0A1628;
+  color: #E0F7FA;
+  margin: 0;
+  padding: 0;
+}</textarea>
+<div class="tool-actions">
+<button class="btn" onclick="minifyCSS()">Minify</button>
+<button class="btn btn-copy" onclick="copyOutput('cssMinOutput')">Copy</button>
+</div>
+<div class="tool-output output-lg" id="cssMinOutput"></div>
+</div>
+<div class="tool-card">
+<h3>Regex Tester</h3>
+<label>Pattern</label>
+<input class="tool-input" id="regexPattern" value="\b[a-zA-Z]{4,}\b" placeholder="Regex pattern">
+<label>Flags</label>
+<input class="tool-input" id="regexFlags" value="gi" placeholder="e.g., gi" style="max-width:120px">
+<label>Test string</label>
+<textarea class="tool-textarea" id="regexString" maxlength="10000" placeholder="Test string...">The quick brown fox jumps over the lazy dog. Hello World!</textarea>
+<div class="tool-actions">
+<button class="btn" onclick="testRegex()">Test</button>
+<button class="btn btn-copy" onclick="copyOutput('regexOutput')">Copy</button>
+</div>
+<div class="tool-output output-lg" id="regexOutput"></div>
+</div>
+<div class="tool-card">
+<h3>SQL Formatter</h3>
+<textarea class="tool-textarea" id="sqlInput" maxlength="50000" placeholder="Paste SQL...">select u.name, u.email, count(o.id) as order_count from users u left join orders o on u.id = o.user_id where u.active = true group by u.id having count(o.id) > 0 order by u.name asc;</textarea>
+<div class="tool-actions">
+<button class="btn" onclick="formatSql()">Format</button>
+<button class="btn btn-copy" onclick="copyOutput('sqlOutput')">Copy</button>
+</div>
+<div class="tool-output output-lg" id="sqlOutput"></div>
+</div>
+<div class="tool-card">
+<h3>JWT Decoder</h3>
+<label>JWT Token</label>
+<textarea class="tool-textarea" id="jwtInput" maxlength="10000" placeholder="Paste JWT...">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJhZG1pbiI6dHJ1ZX0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c</textarea>
+<div class="tool-actions">
+<button class="btn" onclick="decodeJwt()">Decode</button>
+<button class="btn btn-copy" onclick="copyOutput('jwtOutput')">Copy</button>
+</div>
+<div class="tool-output" id="jwtOutput"></div>
+</div>
+</div></div>
+<div class="tool-section" id="section-network">
+<h2>■ Network &amp; Bonus Tools</h2>
+<div class="tools-grid">
+<div class="tool-card">
+<h3>CRON Parser</h3>
+<label>Cron expression (5-field)</label>
+<input class="tool-input" id="cronInput" value="*/15 * * * *" placeholder="minute hour day month weekday" oninput="parseCron()">
+<div class="tool-output" id="cronOutput">Every 15 minutes</div>
+</div>
+<div class="tool-card">
+<h3>HTML Preview</h3>
+<textarea class="tool-textarea" id="htmlPreviewInput" maxlength="50000" placeholder="Paste HTML..."><h2>Hello World</h2><p style="color:#00A86B">This is a <strong>preview</strong>.</p></textarea>
+<div class="tool-actions">
+<button class="btn" onclick="renderHtmlPreview()">Preview</button>
+</div>
+<div id="htmlPreviewContainer" style="display:none;margin-top:10px">
+<iframe id="htmlPreviewFrame" sandbox="allow-scripts" style="width:100%;height:200px;border:1px solid #0F2238;border-radius:3px;background:#fff"></iframe>
+</div>
+</div>
+<div class="tool-card">
+<h3>Markdown Preview</h3>
+<textarea class="tool-textarea" id="mdInput" maxlength="50000" placeholder="Enter Markdown..." oninput="renderMarkdown()"># Hello World
+This is **markdown** with  and more.
+
+- Item 1
+- Item 2
+- Item 3
+
+> A blockquote
+
+  </textarea>
+<div class="tool-output markdown-body" id="mdOutput"></div>
+</div>
+</div></div>
+<div class="tool-section" id="section-all">
+<h2>■ All Tools</h2>
+<p style="color:#B0BEC5;margin-bottom:15px;font-size:13px">All 29 developer tools in one view.</p>
+<div id="allToolsContainer"></div>
+</div>
+<div class="ad-box" style="margin-top:30px">
+<span class="ad-corner ad-tl">[</span><span class="ad-corner ad-tr">]</span>
+<span class="ad-corner ad-bl">[</span><span class="ad-corner ad-br">]</span>
+<div style="padding:10px 0">
+<div style="font-size:10px;color:#B0BEC5;margin-bottom:4px;text-transform:uppercase;letter-spacing:2px">Advertisement</div>
+<div>Blueprint Terminal Pro — Build Your Own Tools</div>
+<div style="font-size:10px;color:#B0BEC5;margin-top:4px">vintage computing aesthetic &bull; developer focused &bull; since 2024</div>
+</div>
+</div>
+<section id="self-test">
+<h2>■ Self-Test Suite</h2>
+<p style="color:#B0BEC5;font-size:12px;margin-bottom:12px">Running tests verifies all 29 tools are functional.</p>
+<div class="tool-actions">
+<button class="btn" onclick="runSelfTest()">▶ Run Self-Test</button>
+<button class="btn btn-copy" onclick="copyOutput('self-test-results')">Copy Results</button>
+</div>
+<div id="self-test-results" style="margin-top:12px">Click "Run Self-Test" to verify all tools.</div>
+</section>
+</div>
+<footer class="footer">
+<div style="max-width:800px;margin:0 auto">
+<div style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-bottom:10px">
+<a href="#">Documentation</a><a href="#">GitHub</a><a href="#">API</a><a href="#">Privacy</a>
+</div>
+<div>Developer Tools — Blueprint Terminal Edition &bull; Built with <span style="color:#00A86B">■</span> in 1969 / 2024</div>
+<div style="font-size:10px;margin-top:6px;color:#0F2238">All tools run client-side. No data leaves your machine.</div>
+</div>
+</footer>
+<div class="toast" id="toast"></div>
+<script>
+function escHtml(s){if(!s&&s!==0)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
+function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2000)}
+function copyOutput(id){
+var el=document.getElementById(id);if(!el)return;
+var text=el.textContent||el.innerText;
+if(!text.trim()){showToast('Nothing to copy');return}
+navigator.clipboard.writeText(text).then(function(){showToast('Copied!')}).catch(function(){showToast('Copy failed')});
+}
+document.querySelectorAll('.tab-btn').forEach(function(btn){
+btn.addEventListener('click',function(){
+var tab=this.dataset.tab;
+document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active')});
+this.classList.add('active');
+document.querySelectorAll('.tool-section').forEach(function(s){s.classList.remove('active')});
+var section=document.getElementById('section-'+tab);
+if(section){section.classList.add('active')}
+if(tab==='all'){renderAllTools()}
+})
+})
+function renderAllTools(){
+var container=document.getElementById('allToolsContainer');
+if(container.children.length>0)return;
+var sections=['text','json','encode','generate','convert','code','network'];
+var html='';
+sections.forEach(function(sid){
+var section=document.getElementById('section-'+sid);
+if(section){
+var h2=section.querySelector('h2');
+var cards=section.querySelectorAll('.tool-card');
+if(h2){html+='<h2 style="margin-top:25px">'+h2.textContent+'</h2>'}
+html+='<div class="tools-grid">';
+cards.forEach(function(c){html+=c.outerHTML});
+html+='</div>';
+}
+});
+container.innerHTML=html;
+}
+</script>
+<script>
+var caseMode="title";
+document.querySelectorAll("[data-case]").forEach(function(btn){
+btn.addEventListener("click",function(){
+document.querySelectorAll("[data-case]").forEach(function(b){b.classList.remove("active")});
+this.classList.add("active");
+caseMode=this.dataset.case;
+convertCase();
+})
+})
+function convertCase(){
+var input=document.getElementById("caseInput").value;
+var result=input;
+switch(caseMode){
+case "upper":result=input.toUpperCase();break;
+case "lower":result=input.toLowerCase();break;
+case "title":result=input.replace(/\w\S*/g,function(w){return w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()});break;
+case "sentence":result=input.replace(/(^\s*\w|[.!?]\s*\w)/g,function(c){return c.toUpperCase()});break;
+case "camel":result=input.replace(/[-_\s]+(.)?/g,function(_,c){return c?c.toUpperCase():""});result=result.charAt(0).toLowerCase()+result.slice(1);break;
+case "snake":result=input.replace(/\s+/g,"_").replace(/([A-Z])/g,"_").toLowerCase().replace(/^_/,"");break;
+case "kebab":result=input.replace(/\s+/g,"-").replace(/([A-Z])/g,"-").toLowerCase().replace(/^-/,"");break;
+}
+document.getElementById("caseOutput").textContent=result;
+}
+convertCase();
+function updateStringCounter(){
+var s=document.getElementById("counterInput").value;
+var chars=s.length;
+var words=s.trim()?s.trim().split(/\s+/).length:0;
+var lines=s?s.split("\n").length:0;
+var bytes=new Blob([s]).size;
+var unique=new Set(s).size;
+document.getElementById("counterOutput").innerHTML="Chars: <strong>"+chars+"</strong> | Words: <strong>"+words+"</strong> | Lines: <strong>"+lines+"</strong> | Bytes: <strong>"+bytes+"</strong> | Unique: <strong>"+unique+"</strong>";
+}
+updateStringCounter();
+function computeDiff(){
+var a=document.getElementById("diffInputA").value;
+var b=document.getElementById("diffInputB").value;
+var linesA=a.split("\n");
+var linesB=b.split("\n");
+var maxLen=Math.max(linesA.length,linesB.length);
+var html="";
+for(var i=0;i<maxLen;i++){
+var la=linesA[i]!==undefined?linesA[i]:null;
+var lb=linesB[i]!==undefined?linesB[i]:null;
+if(la===null){html+="<div class=\"diff-added\">+ "+escHtml(lb)+"</div>"}
+else if(lb===null){html+="<div class=\"diff-removed\">- "+escHtml(la)+"</div>"}
+else if(la!==lb){html+="<div class=\"diff-removed\">- "+escHtml(la)+"</div><div class=\"diff-added\">+ "+escHtml(lb)+"</div>"}
+else{html+="<div style=\"color:#B0BEC5\">  "+escHtml(la)+"</div>"}
+}
+document.getElementById("diffOutput").innerHTML=html||"<span style=\"color:#B0BEC5\">No differences</span>";
+}
+computeDiff();
+var htmlEntityMode="decode";
+function setHtmlEntityMode(m){
+htmlEntityMode=m;
+document.getElementById("htmlEntityEncodeTab").className="btn btn-small sub-tab"+(m==="encode"?" active":"");
+document.getElementById("htmlEntityDecodeTab").className="btn btn-small sub-tab"+(m==="decode"?" active":"");
+}
+function processHtmlEntity(){
+var input=document.getElementById("htmlEntityInput").value;
+var result;
+if(htmlEntityMode==="encode"){
+result=input.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+}else{
+var ta=document.createElement("textarea");
+ta.innerHTML=input;
+result=ta.value;
+}
+document.getElementById("htmlEntityOutput").textContent=result;
+}
+processHtmlEntity();
+</script>
