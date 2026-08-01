@@ -97,7 +97,12 @@ h2{font-size:1.5rem;margin-bottom:20px;color:#4FC3F7;border-bottom:1px solid #0F
 <body>
 <div id="three-container"></div>
 <header class="header">
-<div class="header-left">
+<svg width="34" height="34" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-label="DevTools logo" role="img" style="vertical-align:middle">
+  <defs><linearGradient id="dt-lg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#4FC3F7"/><stop offset="50%" stopColor="#00A86B"/><stop offset="100%" stopColor="#81C784"/></linearGradient></defs>
+  <rect x="5" y="12" width="54" height="40" rx="4" fill="#0A1628" stroke="url(#dt-lg)" strokeWidth="2.5"/>
+  <path d="M14 24l8 8-8 8M30 40h18" stroke="url(#dt-lg)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+  <circle cx="10" cy="17" r="1.6" fill="url(#dt-lg)"/><circle cx="54" cy="47" r="1.6" fill="url(#dt-lg)"/>
+</svg> <div class="header-left">
 <span class="header-badge">v1.0</span>
 <h1 class="header-title">Developer Tools</h1>
 </div>
@@ -646,3 +651,1383 @@ document.getElementById("htmlEntityOutput").textContent=result;
 }
 processHtmlEntity();
 </script>
+
+
+
+<script>
+/* === FIXED TOOL FUNCTIONS (Hermes + Claude Code) === */
+var b64Mode='encode',urlMode='encode',hexMode='encode',htmlEntityMode2='encode';
+
+function findAndReplace(){
+  var text=document.getElementById('findReplaceInput').value;
+  var pattern=document.getElementById('findPattern').value;
+  var replacement=document.getElementById('replaceText').value;
+  var useRegex=document.getElementById('findRegex').checked;
+  try{
+    var re;
+    if(useRegex){
+      re=new RegExp(pattern,'g');
+    }else{
+      var safe=pattern.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+      re=new RegExp(safe,'g');
+    }
+    document.getElementById('findReplaceOutput').textContent=text.replace(re,replacement);
+  }catch(e){
+    document.getElementById('findReplaceOutput').textContent='Error: '+e.message;
+  }
+}
+
+function countMatches(){
+  var text=document.getElementById('findReplaceInput').value;
+  var pattern=document.getElementById('findPattern').value;
+  var useRegex=document.getElementById('findRegex').checked;
+  try{
+    var re;
+    if(useRegex){
+      re=new RegExp(pattern,'g');
+    }else{
+      var safe=pattern.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+      re=new RegExp(safe,'g');
+    }
+    var m=text.match(re);
+    var n=m?m.length:0;
+    document.getElementById('findReplaceOutput').textContent=n+' match'+(n===1?'':'es')+' found';
+  }catch(e){
+    document.getElementById('findReplaceOutput').textContent='Error: '+e.message;
+  }
+}
+
+function formatJson(){
+  var input=document.getElementById('jsonFormatInput').value;
+  try{
+    var obj=JSON.parse(input);
+    document.getElementById('jsonFormatOutput').textContent=JSON.stringify(obj,null,2);
+  }catch(e){
+    document.getElementById('jsonFormatOutput').textContent='❌ Invalid JSON: '+e.message;
+  }
+}
+
+function minifyJson(){
+  var input=document.getElementById('jsonMinifyInput').value;
+  try{
+    var obj=JSON.parse(input);
+    document.getElementById('jsonMinifyOutput').textContent=JSON.stringify(obj);
+  }catch(e){
+    document.getElementById('jsonMinifyOutput').textContent='❌ Invalid JSON: '+e.message;
+  }
+}
+
+function validateJson(){
+  var input=document.getElementById('jsonValidateInput').value;
+  try{
+    JSON.parse(input);
+    document.getElementById('jsonValidateOutput').textContent='✅ Valid JSON';
+  }catch(e){
+    document.getElementById('jsonValidateOutput').textContent='❌ '+e.message;
+  }
+}
+
+function _csvEscape(v){
+  if(v===null||v===undefined)return '';
+  var s=String(v);
+  if(/[",\n\r]/.test(s))return '"'+s.replace(/"/g,'""')+'"';
+  return s;
+}
+
+function jsonToCsv(){
+  var input=document.getElementById('jsonCsvInput').value;
+  try{
+    var arr=JSON.parse(input);
+    if(!Array.isArray(arr)||arr.length===0){
+      document.getElementById('jsonCsvOutput').textContent='❌ Expected non-empty array of objects';
+      return;
+    }
+    var headers=Object.keys(arr[0]);
+    var lines=[headers.map(_csvEscape).join(',')];
+    for(var i=0;i<arr.length;i++){
+      lines.push(headers.map(function(h){return _csvEscape(arr[i][h]);}).join(','));
+    }
+    document.getElementById('jsonCsvOutput').textContent=lines.join('\n');
+  }catch(e){
+    document.getElementById('jsonCsvOutput').textContent='❌ '+e.message;
+  }
+}
+
+function downloadCsv(){
+  var csv=document.getElementById('jsonCsvOutput').value;
+  var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download='data.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function setBase64Mode(mode){
+  b64Mode=mode;
+  document.getElementById('b64EncodeTab').classList.toggle('active',mode==='encode');
+  document.getElementById('b64DecodeTab').classList.toggle('active',mode==='decode');
+}
+
+function _utf8ToB64(s){return btoa(unescape(encodeURIComponent(s)));}
+function _b64ToUtf8(s){return decodeURIComponent(escape(atob(s)));}
+
+function processBase64(){
+  var input=document.getElementById('base64Input').value;
+  try{
+    var out;
+    if(b64Mode==='encode')out=_utf8ToB64(input);
+    else out=_b64ToUtf8(input);
+    document.getElementById('base64Output').textContent=out;
+  }catch(e){
+    document.getElementById('base64Output').textContent='❌ '+e.message;
+  }
+}
+
+function handleBase64File(file){
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var bytes=new Uint8Array(e.target.result);
+    var bin='';
+    for(var i=0;i<bytes.length;i++)bin+=String.fromCharCode(bytes[i]);
+    document.getElementById('base64Output').textContent=btoa(bin);
+  };
+  reader.onerror=function(){
+    document.getElementById('base64Output').textContent='❌ Failed to read file';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function setUrlMode(mode){
+  urlMode=mode;
+  document.getElementById('urlEncTab').classList.toggle('active',mode==='encode');
+  document.getElementById('urlDecTab').classList.toggle('active',mode==='decode');
+}
+
+function processUrl(){
+  var input=document.getElementById('urlInput').value;
+  try{
+    var out=urlMode==='encode'?encodeURIComponent(input):decodeURIComponent(input);
+    document.getElementById('urlOutput').textContent=out;
+  }catch(e){
+    document.getElementById('urlOutput').textContent='❌ '+e.message;
+  }
+}
+
+function setHexMode(mode){
+  hexMode=mode;
+  document.getElementById('hexEncTab').classList.toggle('active',mode==='encode');
+  document.getElementById('hexDecTab').classList.toggle('active',mode==='decode');
+}
+
+function _strToHex(str){
+  var bytes=new TextEncoder().encode(str);
+  var hex='';
+  for(var i=0;i<bytes.length;i++)hex+=bytes[i].toString(16).padStart(2,'0');
+  return hex;
+}
+function _hexToStr(hex){
+  var clean=hex.replace(/\s+/g,'');
+  if(clean.length%2!==0)throw new Error('Invalid hex length');
+  if(!/^[0-9a-fA-F]*$/.test(clean))throw new Error('Invalid hex characters');
+  var bytes=new Uint8Array(clean.length/2);
+  for(var i=0;i<bytes.length;i++)bytes[i]=parseInt(clean.substr(i*2,2),16);
+  return new TextDecoder().decode(bytes);
+}
+
+function processHex(){
+  var input=document.getElementById('hexInput').value;
+  try{
+    var out=hexMode==='encode'?_strToHex(input):_hexToStr(input);
+    document.getElementById('hexOutput').textContent=out;
+  }catch(e){
+    document.getElementById('hexOutput').textContent='❌ '+e.message;
+  }
+}
+
+function setHtmlEntityMode2(mode){
+  htmlEntityMode2=mode;
+  document.getElementById('htmlEntEncTab2').classList.toggle('active',mode==='encode');
+  document.getElementById('htmlEntDecTab2').classList.toggle('active',mode==='decode');
+}
+
+function processHtmlEntity2(){
+  var input=document.getElementById('htmlEntityInput2').value;
+  try{
+    var out;
+    if(htmlEntityMode2==='encode'){
+      out=input.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }else{
+      var ta=document.createElement('textarea');
+      ta.innerHTML=input;
+      out=ta.value;
+    }
+    document.getElementById('htmlEntityOutput2').textContent=out;
+  }catch(e){
+    document.getElementById('htmlEntityOutput2').textContent='❌ '+e.message;
+  }
+}
+
+var csvMode = 'csv2json';
+
+function generateUuid() {
+  var count = parseInt(document.getElementById('uuidCount').value, 10) || 1;
+  var uuids = [];
+  for (var i = 0; i < count; i++) {
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      var bytes = new Uint8Array(16);
+      crypto.getRandomValues(bytes);
+      bytes[6] = (bytes[6] & 0x0f) | 0x40;
+      bytes[8] = (bytes[8] & 0x3f) | 0x80;
+      var hex = '';
+      for (var j = 0; j < 16; j++) {
+        hex += bytes[j].toString(16).padStart(2, '0');
+      }
+      uuids.push(hex.substr(0, 8) + '-' + hex.substr(8, 4) + '-' + hex.substr(12, 4) + '-' + hex.substr(16, 4) + '-' + hex.substr(20, 12));
+    } else {
+      uuids.push('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        var r = Math.random() * 16 | 0;
+        var v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      }));
+    }
+  }
+  document.getElementById('uuidOutput').textContent = uuids.join('\n');
+}
+
+function generatePassword() {
+  var length = parseInt(document.getElementById('pwLength').value, 10) || 12;
+  var upper = document.getElementById('pwUpper').checked;
+  var lower = document.getElementById('pwLower').checked;
+  var digits = document.getElementById('pwDigits').checked;
+  var special = document.getElementById('pwSpecial').checked;
+  var sets = [];
+  if (upper) sets.push('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+  if (lower) sets.push('abcdefghijklmnopqrstuvwxyz');
+  if (digits) sets.push('0123456789');
+  if (special) sets.push('!@#$%^&*()_+-=[]{}|;:,.<>?');
+  if (sets.length === 0) sets = ['ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz', '0123456789', '!@#$%^&*()_+-=[]{}|;:,.<>?'];
+  var all = sets.join('');
+  var password = '';
+  var cryptoObj = (typeof crypto !== 'undefined') ? crypto : null;
+  for (var i = 0; i < length; i++) {
+    var idx;
+    if (cryptoObj && cryptoObj.getRandomValues) {
+      var buf = new Uint32Array(1);
+      cryptoObj.getRandomValues(buf);
+      idx = buf[0] % all.length;
+    } else {
+      idx = Math.floor(Math.random() * all.length);
+    }
+    password += all.charAt(idx);
+  }
+  document.getElementById('pwOutput').textContent = password;
+}
+
+async function generateHash() {
+  var input = document.getElementById('hashInput').value;
+  var output = document.getElementById('hashOutput');
+  output.textContent = '⏳ Computing...';
+  try {
+    var enc = new TextEncoder();
+    var data = enc.encode(input);
+    var digestBuf = await crypto.subtle.digest('SHA-256', data);
+    var digestArr = Array.from(new Uint8Array(digestBuf));
+    var hex = digestArr.map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+    output.textContent = hex;
+  } catch (e) {
+    output.textContent = '❌ ' + e.message;
+  }
+}
+
+function timestampToDate() {
+  var raw = document.getElementById('tsInput').value.trim();
+  var num = parseFloat(raw);
+  if (isNaN(num)) {
+    document.getElementById('tsOutput').textContent = '❌ Invalid timestamp';
+    return;
+  }
+  var ms = num > 1e11 ? num : num * 1000;
+  var d = new Date(ms);
+  if (isNaN(d.getTime())) {
+    document.getElementById('tsOutput').textContent = '❌ Invalid timestamp';
+    return;
+  }
+  document.getElementById('tsOutput').textContent = d.toString();
+}
+
+function setCsvMode(mode) {
+  csvMode = mode;
+  var tab1 = document.getElementById('csvToJsonTab');
+  var tab2 = document.getElementById('jsonToCsvTab');
+  if (mode === 'csv2json') {
+    tab1.classList.add('active');
+    tab2.classList.remove('active');
+  } else {
+    tab2.classList.add('active');
+    tab1.classList.remove('active');
+  }
+}
+
+function parseCsv(text) {
+  var rows = [];
+  var row = [];
+  var field = '';
+  var inQuotes = false;
+  for (var i = 0; i < text.length; i++) {
+    var c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; }
+        else { inQuotes = false; }
+      } else {
+        field += c;
+      }
+    } else {
+      if (c === '"') {
+        inQuotes = true;
+      } else if (c === ',') {
+        row.push(field);
+        field = '';
+      } else if (c === '\n' || c === '\r') {
+        if (c === '\r' && text[i + 1] === '\n') i++;
+        row.push(field);
+        rows.push(row);
+        row = [];
+        field = '';
+      } else {
+        field += c;
+      }
+    }
+  }
+  if (field.length > 0 || row.length > 0) {
+    row.push(field);
+    rows.push(row);
+  }
+  return rows;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function convertCsvJson() {
+  var input = document.getElementById('csvInput').value;
+  var output = document.getElementById('csvOutput');
+  try {
+    if (csvMode === 'csv2json') {
+      var rows = parseCsv(input);
+      if (rows.length === 0) {
+        output.textContent = '[]';
+        return;
+      }
+      var headers = rows[0];
+      var arr = [];
+      for (var i = 1; i < rows.length; i++) {
+        if (rows[i].length === 1 && rows[i][0] === '') continue;
+        var obj = {};
+        for (var j = 0; j < headers.length; j++) {
+          obj[headers[j]] = rows[i][j] !== undefined ? rows[i][j] : '';
+        }
+        arr.push(obj);
+      }
+      output.textContent = JSON.stringify(arr, null, 2);
+    } else {
+      var data = JSON.parse(input);
+      if (!Array.isArray(data)) throw new Error('JSON must be an array');
+      if (data.length === 0) {
+        output.textContent = '';
+        return;
+      }
+      var headers = [];
+      for (var k = 0; k < data.length; k++) {
+        var item = data[k];
+        if (typeof item === 'object' && item !== null) {
+          for (var key in item) {
+            if (headers.indexOf(key) === -1) headers.push(key);
+          }
+        }
+      }
+      function csvCell(v) {
+        var s = v === null || v === undefined ? '' : String(v);
+        if (s.indexOf(',') !== -1 || s.indexOf('"') !== -1 || s.indexOf('\n') !== -1) {
+          return '"' + s.replace(/"/g, '""') + '"';
+        }
+        return s;
+      }
+      var lines = [headers.map(csvCell).join(',')];
+      for (var m = 0; m < data.length; m++) {
+        var row = headers.map(function (h) { return csvCell(data[m][h]); });
+        lines.push(row.join(','));
+      }
+      output.textContent = lines.join('\n');
+    }
+  } catch (e) {
+    output.textContent = '❌ ' + e.message;
+  }
+}
+
+function testRegex() {
+  var pattern = document.getElementById('regexPattern').value;
+  var flags = document.getElementById('regexFlags').value;
+  var str = document.getElementById('regexString').value;
+  var output = document.getElementById('regexOutput');
+  try {
+    var re = new RegExp(pattern, flags);
+    var matches = [];
+    if (re.global) {
+      var match;
+      while ((match = re.exec(str)) !== null) {
+        matches.push(match[0]);
+        if (match.index === re.lastIndex) re.lastIndex++;
+      }
+    } else {
+      var m = re.exec(str);
+      if (m) matches.push(m[0]);
+    }
+    var html = 'Matches: ' + matches.length;
+    if (matches.length > 0) {
+      html += '<br>';
+      for (var i = 0; i < Math.min(matches.length, 20); i++) {
+        html += escHtml(matches[i]) + '<br>';
+      }
+    }
+    output.innerHTML = html;
+  } catch (e) {
+    output.textContent = '❌ ' + e.message;
+  }
+}
+
+function base64UrlDecode(s) {
+  s = s.replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  try {
+    var decoded = decodeURIComponent(escape(atob(s)));
+    return decoded;
+  } catch (e) {
+    return atob(s);
+  }
+}
+
+function decodeJwt() {
+  var input = document.getElementById('jwtInput').value;
+  var output = document.getElementById('jwtOutput');
+  try {
+    var parts = input.split('.');
+    if (parts.length !== 3) throw new Error('Invalid JWT format');
+    var header = base64UrlDecode(parts[0]);
+    var payload = base64UrlDecode(parts[1]);
+    var headerJson = JSON.stringify(JSON.parse(header), null, 2);
+    var payloadJson = JSON.stringify(JSON.parse(payload), null, 2);
+    output.textContent = 'HEADER:\n' + headerJson + '\nPAYLOAD:\n' + payloadJson;
+  } catch (e) {
+    output.textContent = '❌ ' + e.message;
+  }
+}
+
+function generateLorem() {
+  const type = document.getElementById('loremType').value;
+  const rawCount = parseInt(document.getElementById('loremCount').value, 10);
+  const count = rawCount > 0 ? rawCount : 1;
+  const output = document.getElementById('loremOutput');
+
+  const baseText = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.';
+
+  const sentences = (baseText.match(/[^.]+\./g) || []).map(s => s.trim());
+  const words = baseText.replace(/[.,]/g, '').split(/\s+/).filter(w => w);
+
+  const paragraphs = [];
+  const perPara = 3;
+  for (let i = 0; i < sentences.length; i += perPara) {
+    paragraphs.push(sentences.slice(i, i + perPara).join(' '));
+  }
+
+  let result = '';
+  if (type === 'words') {
+    const out = [];
+    for (let i = 0; i < count; i++) out.push(words[i % words.length]);
+    result = out.join(' ');
+  } else if (type === 'sentences') {
+    const out = [];
+    for (let i = 0; i < count; i++) out.push(sentences[i % sentences.length]);
+    result = out.join(' ');
+  } else if (type === 'paragraphs') {
+    const out = [];
+    for (let i = 0; i < count; i++) out.push(paragraphs[i % paragraphs.length]);
+    result = out.join('\n\n');
+  }
+
+  output.textContent = result;
+}
+
+function updateNumberBases(from) {
+  const dec = document.getElementById('numDecimal');
+  const bin = document.getElementById('numBinary');
+  const oct = document.getElementById('numOctal');
+  const hex = document.getElementById('numHex');
+
+  const sources = { decimal: dec, binary: bin, octal: oct, hex: hex };
+  const bases = { decimal: 10, binary: 2, octal: 8, hex: 16 };
+
+  const clearOthers = () => {
+    if (from !== 'decimal') dec.value = '';
+    if (from !== 'binary') bin.value = '';
+    if (from !== 'octal') oct.value = '';
+    if (from !== 'hex') hex.value = '';
+  };
+
+  const val = sources[from].value.trim();
+  if (val === '' || !/^-?[0-9a-fA-F]+$/.test(val)) {
+    clearOthers();
+    return;
+  }
+
+  const n = parseInt(val, bases[from]);
+  if (isNaN(n)) {
+    clearOthers();
+    return;
+  }
+
+  const sign = n < 0 ? '-' : '';
+  const abs = Math.abs(n);
+  if (from !== 'decimal') dec.value = String(n);
+  if (from !== 'binary') bin.value = sign + abs.toString(2);
+  if (from !== 'octal') oct.value = sign + abs.toString(8);
+  if (from !== 'hex') hex.value = sign + abs.toString(16).toUpperCase();
+}
+
+function dateToTimestamp() {
+  const input = document.getElementById('tsDateInput').value;
+  const output = document.getElementById('tsOutput');
+  if (!input) {
+    output.textContent = '';
+    return;
+  }
+  const d = new Date(input);
+  if (isNaN(d.getTime())) {
+    output.textContent = '';
+    return;
+  }
+  output.textContent = Math.floor(d.getTime() / 1000).toString();
+}
+
+function minifyJS() {
+  const input = document.getElementById('jsMinInput').value;
+  const output = document.getElementById('jsMinOutput');
+  if (!input) {
+    output.textContent = '';
+    return;
+  }
+
+  let result = '';
+  let i = 0;
+  const n = input.length;
+  let pendingSpace = false;
+  const idChar = /[A-Za-z0-9_$]/;
+
+  const flushSpace = (next) => {
+    if (!pendingSpace || result.length === 0) { pendingSpace = false; return ''; }
+    const last = result[result.length - 1];
+    pendingSpace = false;
+    if (idChar.test(last) && idChar.test(next)) return ' ';
+    return '';
+  };
+
+  while (i < n) {
+    const c = input[i];
+    const c2 = input[i + 1];
+
+    if (c === '/' && c2 === '/') {
+      i += 2;
+      while (i < n && input[i] !== '\n') i++;
+      pendingSpace = true;
+      continue;
+    }
+    if (c === '/' && c2 === '*') {
+      i += 2;
+      while (i < n && !(input[i] === '*' && input[i + 1] === '/')) i++;
+      i += 2;
+      pendingSpace = true;
+      continue;
+    }
+
+    if (c === '"' || c === "'") {
+      result += flushSpace(c);
+      const quote = c;
+      result += c;
+      i++;
+      while (i < n && input[i] !== quote) {
+        if (input[i] === '\\' && i + 1 < n) { result += input[i] + input[i + 1]; i += 2; }
+        else { result += input[i]; i++; }
+      }
+      if (i < n) { result += input[i]; i++; }
+      continue;
+    }
+
+    if (c === '`') {
+      result += flushSpace(c);
+      result += c;
+      i++;
+      while (i < n && input[i] !== '`') {
+        if (input[i] === '\\' && i + 1 < n) { result += input[i] + input[i + 1]; i += 2; }
+        else { result += input[i]; i++; }
+      }
+      if (i < n) { result += input[i]; i++; }
+      continue;
+    }
+
+    if (/\s/.test(c)) {
+      pendingSpace = true;
+      i++;
+      continue;
+    }
+
+    result += flushSpace(c);
+    result += c;
+    i++;
+  }
+
+  output.textContent = result;
+}
+
+function minifyCSS() {
+  const input = document.getElementById('cssMinInput').value;
+  const output = document.getElementById('cssMinOutput');
+  if (!input) {
+    output.textContent = '';
+    return;
+  }
+
+  let result = '';
+  let i = 0;
+  const n = input.length;
+
+  while (i < n) {
+    const c = input[i];
+    const c2 = input[i + 1];
+
+    if (c === '/' && c2 === '*') {
+      i += 2;
+      while (i < n && !(input[i] === '*' && input[i + 1] === '/')) i++;
+      i += 2;
+      continue;
+    }
+
+    if (c === '"' || c === "'") {
+      const quote = c;
+      result += c;
+      i++;
+      while (i < n && input[i] !== quote) {
+        if (input[i] === '\\' && i + 1 < n) { result += input[i] + input[i + 1]; i += 2; }
+        else { result += input[i]; i++; }
+      }
+      if (i < n) { result += input[i]; i++; }
+      continue;
+    }
+
+    result += c;
+    i++;
+  }
+
+  result = result
+    .replace(/\s*([{};,:>])\s*/g, '$1')
+    .replace(/\s+/g, ' ')
+    .replace(/;}/g, '}')
+    .trim();
+
+  output.textContent = result;
+}
+
+function formatSql() {
+  const input = document.getElementById('sqlInput').value;
+  const output = document.getElementById('sqlOutput');
+  if (!input) {
+    output.textContent = '';
+    return;
+  }
+
+  const strings = [];
+  let sql = input.replace(/'(?:[^']|'')*'/g, (m) => {
+    strings.push(m);
+    return '\x00' + (strings.length - 1) + '\x00';
+  });
+  sql = sql.replace(/"[^"]*"/g, (m) => {
+    strings.push(m);
+    return '\x00' + (strings.length - 1) + '\x00';
+  });
+
+  const multiWord = ['GROUP BY', 'ORDER BY', 'INSERT INTO'];
+  for (const kw of multiWord) {
+    const re = new RegExp('\\b' + kw.replace(' ', '\\s+') + '\\b', 'gi');
+    sql = sql.replace(re, kw);
+  }
+
+  const singleWord = [
+    'SELECT', 'FROM', 'WHERE', 'VALUES', 'UPDATE', 'SET', 'JOIN',
+    'LEFT', 'RIGHT', 'INNER', 'OUTER', 'ON', 'HAVING', 'LIMIT',
+    'AND', 'OR', 'NOT', 'NULL', 'AS', 'DISTINCT', 'COUNT', 'SUM', 'AVG', 'IN'
+  ];
+  for (const kw of singleWord) {
+    const re = new RegExp('\\b' + kw + '\\b', 'g');
+    sql = sql.replace(re, kw);
+  }
+
+  const majorClauses = [
+    'INSERT INTO', 'LEFT JOIN', 'RIGHT JOIN', 'INNER JOIN', 'OUTER JOIN',
+    'GROUP BY', 'ORDER BY',
+    'SELECT', 'FROM', 'WHERE', 'VALUES', 'UPDATE', 'SET', 'JOIN', 'ON',
+    'HAVING', 'LIMIT'
+  ];
+  const altPattern = majorClauses.map(c => c.replace(' ', '\\s+')).join('|');
+  const majorRe = new RegExp('\\s+(' + altPattern + ')\\b', 'g');
+  sql = sql.replace(majorRe, (_, clause) => '\n' + clause.replace(/\s+/g, ' '));
+
+  const inRe = /\bIN\s*\(/g;
+  let inResult = '';
+  let lastIdx = 0;
+  let m;
+  while ((m = inRe.exec(sql)) !== null) {
+    inResult += sql.substring(lastIdx, m.index) + 'IN (\n  ';
+    let depth = 1;
+    let j = m.index + m[0].length;
+    const contentStart = j;
+    while (j < sql.length && depth > 0) {
+      if (sql[j] === '(') depth++;
+      else if (sql[j] === ')') depth--;
+      if (depth > 0) j++;
+    }
+    const content = sql.substring(contentStart, j);
+    const parts = content.split(',');
+    inResult += parts.map(p => '  ' + p.trim()).join(',\n') + '\n)';
+    lastIdx = j + 1;
+    inRe.lastIndex = lastIdx;
+  }
+  inResult += sql.substring(lastIdx);
+  sql = inResult;
+
+  sql = sql.replace(/\x00(\d+)\x00/g, (_, idx) => strings[parseInt(idx, 10)]);
+
+  output.textContent = sql;
+}
+
+function renderHtmlPreview() {
+  const input = document.getElementById('htmlPreviewInput').value;
+  const frame = document.getElementById('htmlPreviewFrame');
+  if (input.trim() === '') {
+    frame.srcdoc = '<div style="font-family:sans-serif;color:#888;padding:24px;">Enter HTML above to preview here</div>';
+  } else {
+    frame.srcdoc = input;
+  }
+}
+
+function runSelfTest() {
+  const results = [];
+  const out = document.getElementById('self-test-results');
+
+  function getVal(id) {
+    const el = document.getElementById(id);
+    return el ? el.value : '';
+  }
+  function setVal(id, v) {
+    const el = document.getElementById(id);
+    if (el) el.value = v;
+  }
+  function getChecked(id) {
+    const el = document.getElementById(id);
+    return el ? el.checked : false;
+  }
+  function setChecked(id, c) {
+    const el = document.getElementById(id);
+    if (el) el.checked = c;
+  }
+  function getText(id) {
+    const el = document.getElementById(id);
+    return el ? (el.textContent || '') : '';
+  }
+  function report(name, ok, reason) {
+    results.push((ok ? '✅ ' : '❌ ') + name + (ok ? '' : ' (' + reason + ')'));
+  }
+  function fireInput(id) {
+    const el = document.getElementById(id);
+    if (el) el.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  function writeOutput() {
+    if (out) out.textContent = results.join('\n');
+  }
+
+  // 1. Case converter
+  try {
+    const orig = getVal('caseInput');
+    setVal('caseInput', 'hello world');
+    convertCase();
+    const o = getText('caseOutput');
+    report('Case Converter', o.length > 0, 'output: "' + o + '"');
+    setVal('caseInput', orig);
+  } catch (e) { report('Case Converter', false, e.message); }
+
+  // 2. String counter
+  try {
+    const orig = getVal('counterInput');
+    setVal('counterInput', 'hello');
+    fireInput('counterInput');
+    const o = getText('counterOutput');
+    report('String Counter', o.indexOf('5') !== -1, 'output: "' + o + '"');
+    setVal('counterInput', orig);
+    fireInput('counterInput');
+  } catch (e) { report('String Counter', false, e.message); }
+
+  // 3. JSON format
+  try {
+    const orig = getVal('jsonFormatInput');
+    setVal('jsonFormatInput', '{"a":1,"b":2}');
+    formatJson();
+    const o = getText('jsonFormatOutput');
+    report('JSON Format', o.length > 0 && o.indexOf('"a"') !== -1, 'output: "' + o + '"');
+    setVal('jsonFormatInput', orig);
+  } catch (e) { report('JSON Format', false, e.message); }
+
+  // 4. JSON minify
+  try {
+    const orig = getVal('jsonMinifyInput');
+    setVal('jsonMinifyInput', '{ "a" :   1 ,  "b" : 2 }');
+    minifyJson();
+    const o = getText('jsonMinifyOutput');
+    report('JSON Minify', o.indexOf('"a":1') !== -1, 'output: "' + o + '"');
+    setVal('jsonMinifyInput', orig);
+  } catch (e) { report('JSON Minify', false, e.message); }
+
+  // 5. JSON validate
+  try {
+    const orig = getVal('jsonValidateInput');
+    setVal('jsonValidateInput', '{"a":1}');
+    validateJson();
+    const o = getText('jsonValidateOutput');
+    const low = o.toLowerCase();
+    report('JSON Validate', low.indexOf('valid') !== -1 || o.indexOf('✓') !== -1, 'output: "' + o + '"');
+    setVal('jsonValidateInput', orig);
+  } catch (e) { report('JSON Validate', false, e.message); }
+
+  // 6. Base64 encode
+  try {
+    const orig = getVal('base64Input');
+    setVal('base64Input', 'hello');
+    setBase64Mode('encode');
+    processBase64();
+    const o = getText('base64Output');
+    report('Base64 Encode', o.indexOf('aGVsbG8=') !== -1, 'output: "' + o + '"');
+    setVal('base64Input', orig);
+  } catch (e) { report('Base64 Encode', false, e.message); }
+
+  // 7. URL encode
+  try {
+    const orig = getVal('urlInput');
+    setVal('urlInput', 'hello world');
+    setUrlMode('encode');
+    processUrl();
+    const o = getText('urlOutput');
+    report('URL Encode', o.indexOf('hello%20world') !== -1, 'output: "' + o + '"');
+    setVal('urlInput', orig);
+  } catch (e) { report('URL Encode', false, e.message); }
+
+  // 8. Hex encode
+  try {
+    const orig = getVal('hexInput');
+    setVal('hexInput', 'hello');
+    setHexMode('encode');
+    processHex();
+    const o = getText('hexOutput');
+    report('Hex Encode', o.toLowerCase().indexOf('68656c6c6f') !== -1, 'output: "' + o + '"');
+    setVal('hexInput', orig);
+  } catch (e) { report('Hex Encode', false, e.message); }
+
+  // 9. UUID
+  try {
+    const orig = getVal('uuidCount');
+    setVal('uuidCount', '1');
+    generateUuid();
+    const o = getText('uuidOutput');
+    const uuidRe = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+    report('UUID Generator', uuidRe.test(o), 'output: "' + o + '"');
+    setVal('uuidCount', orig);
+  } catch (e) { report('UUID Generator', false, e.message); }
+
+  // 10. Password
+  try {
+    const oL = getVal('pwLength');
+    const oU = getChecked('pwUpper');
+    const oLo = getChecked('pwLower');
+    const oD = getChecked('pwDigits');
+    const oS = getChecked('pwSpecial');
+    setVal('pwLength', '8');
+    setChecked('pwUpper', true);
+    setChecked('pwLower', true);
+    setChecked('pwDigits', true);
+    setChecked('pwSpecial', true);
+    generatePassword();
+    const o = getText('pwOutput');
+    report('Password Generator', o.length > 0, 'output: "' + o + '"');
+    setVal('pwLength', oL);
+    setChecked('pwUpper', oU);
+    setChecked('pwLower', oLo);
+    setChecked('pwDigits', oD);
+    setChecked('pwSpecial', oS);
+  } catch (e) { report('Password Generator', false, e.message); }
+
+  // 11. Hash (async) — kick off
+  let hashOrig = '';
+  try {
+    hashOrig = getVal('hashInput');
+    setVal('hashInput', 'hello');
+    generateHash();
+  } catch (e) { report('Hash', false, e.message); }
+
+  // 12. CSV
+  try {
+    const orig = getVal('csvInput');
+    setVal('csvInput', 'a,b\n1,2');
+    setCsvMode('csv2json');
+    convertCsvJson();
+    const o = getText('csvOutput');
+    report('CSV Converter', o.length > 0 && o.indexOf('a') !== -1, 'output: "' + o + '"');
+    setVal('csvInput', orig);
+  } catch (e) { report('CSV Converter', false, e.message); }
+
+  // 13. Regex
+  try {
+    const oP = getVal('regexPattern');
+    const oF = getVal('regexFlags');
+    const oS = getVal('regexString');
+    setVal('regexPattern', '\\d+');
+    setVal('regexFlags', 'g');
+    setVal('regexString', 'abc 123 def 456');
+    testRegex();
+    const o = getText('regexOutput');
+    report('Regex Tester', o.length > 0 && (o.indexOf('123') !== -1 || o.indexOf('456') !== -1), 'output: "' + o + '"');
+    setVal('regexPattern', oP);
+    setVal('regexFlags', oF);
+    setVal('regexString', oS);
+  } catch (e) { report('Regex Tester', false, e.message); }
+
+  // 14. JWT
+  try {
+    const orig = getVal('jwtInput');
+    setVal('jwtInput', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c');
+    decodeJwt();
+    const o = getText('jwtOutput');
+    report('JWT Decoder', o.length > 0 && (o.indexOf('1234567890') !== -1 || o.indexOf('John') !== -1), 'output: "' + o + '"');
+    setVal('jwtInput', orig);
+  } catch (e) { report('JWT Decoder', false, e.message); }
+
+  // 15. Timestamp
+  try {
+    const orig = getVal('tsInput');
+    setVal('tsInput', '1700000000');
+    timestampToDate();
+    const o = getText('tsOutput');
+    report('Timestamp Converter', o.length > 0, 'output: "' + o + '"');
+    setVal('tsInput', orig);
+  } catch (e) { report('Timestamp Converter', false, e.message); }
+
+  // Final write after the async hash completes
+  setTimeout(function() {
+    try {
+      const o = getText('hashOutput');
+      report('Hash', o.length > 0 && /[0-9a-f]/i.test(o), 'output: "' + o + '"');
+      setVal('hashInput', hashOrig);
+    } catch (e) { report('Hash', false, e.message); }
+    writeOutput();
+  }, 200);
+}
+
+// parseCron() and renderMarkdown() — vanilla JS, exact element IDs
+
+function parseCron() {
+  const input = document.getElementById('cronInput').value.trim();
+  const output = document.getElementById('cronOutput');
+
+  const fieldNames = ['minute', 'hour', 'day-of-month', 'month', 'day-of-week'];
+  const fieldRanges = [
+    [0, 59],
+    [0, 23],
+    [1, 31],
+    [1, 12],
+    [0, 6]
+  ];
+
+  function parseField(field, min, max) {
+    const values = new Set();
+    const parts = field.split(',');
+    for (const part of parts) {
+      let rangePart = part;
+      let step = 1;
+      if (part.includes('/')) {
+        const [base, stepStr] = part.split('/');
+        const stepNum = parseInt(stepStr, 10);
+        if (isNaN(stepNum) || stepNum < 1) return null;
+        step = stepNum;
+        rangePart = base;
+      }
+      let start, end;
+      if (rangePart === '*') {
+        start = min;
+        end = max;
+      } else if (rangePart.includes('-')) {
+        const [s, e] = rangePart.split('-');
+        start = parseInt(s, 10);
+        end = parseInt(e, 10);
+        if (isNaN(start) || isNaN(end)) return null;
+      } else {
+        const v = parseInt(rangePart, 10);
+        if (isNaN(v)) return null;
+        if (part.includes('/')) {
+          start = v;
+          end = max;
+        } else {
+          start = v;
+          end = v;
+        }
+      }
+      if (start < min || end > max || start > end) return null;
+      for (let i = start; i <= end; i += step) {
+        values.add(i);
+      }
+    }
+    return values;
+  }
+
+  function formatHour(h) {
+    return String(h).padStart(2, '0');
+  }
+
+  function formatMinute(m) {
+    return String(m).padStart(2, '0');
+  }
+
+  function isFullRange(values, min, max) {
+    if (values.size !== (max - min + 1)) return false;
+    for (let i = min; i <= max; i++) {
+      if (!values.has(i)) return false;
+    }
+    return true;
+  }
+
+  function isSingle(values) {
+    return values.size === 1;
+  }
+
+  function isStepOnly(field, min, max) {
+    if (!field.includes('/')) return false;
+    if (field.startsWith('*/')) return true;
+    return false;
+  }
+
+  function getStepValue(field) {
+    if (field.startsWith('*/')) {
+      return parseInt(field.substring(2), 10);
+    }
+    return 1;
+  }
+
+  if (!input) {
+    output.textContent = 'Invalid cron expression';
+    return;
+  }
+
+  const fields = input.split(/\s+/);
+  if (fields.length !== 5) {
+    output.textContent = 'Invalid cron expression';
+    return;
+  }
+
+  const parsed = [];
+  for (let i = 0; i < 5; i++) {
+    const f = parseField(fields[i], fieldRanges[i][0], fieldRanges[i][1]);
+    if (f === null) {
+      output.textContent = 'Invalid cron expression';
+      return;
+    }
+    parsed.push(f);
+  }
+
+  const [minutes, hours, days, months, weekdays] = parsed;
+  const [rawMin, rawHr, rawDay, rawMon, rawWk] = fields;
+
+  const dowNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+  // Determine description
+  let description = '';
+
+  const minFull = isFullRange(minutes, 0, 59);
+  const hrFull = isFullRange(hours, 0, 23);
+  const dayFull = isFullRange(days, 1, 31);
+  const monFull = isFullRange(months, 1, 12);
+  const wkFull = isFullRange(weekdays, 0, 6);
+
+  const minSingle = isSingle(minutes);
+  const hrSingle = isSingle(hours);
+
+  // Case: specific minute, every hour, every day, every month, every weekday -> "At HH:MM every day"
+  if (minSingle && hrSingle && dayFull && monFull && wkFull) {
+    const m = [...minutes][0];
+    const h = [...hours][0];
+    description = `At ${formatHour(h)}:${formatMinute(m)} every day`;
+  }
+  // Case: specific minute, every hour, day full, month full, single weekday
+  else if (minSingle && hrSingle && dayFull && monFull && weekdays.size === 1) {
+    const m = [...minutes][0];
+    const h = [...hours][0];
+    const w = [...weekdays][0];
+    description = `Every ${dowNames[w]} at ${formatHour(h)}:${formatMinute(m)}`;
+  }
+  // Case: specific minute, every hour, every month, single day of month
+  else if (minSingle && hrSingle && days.size === 1 && monFull && wkFull) {
+    const m = [...minutes][0];
+    const h = [...hours][0];
+    const d = [...days][0];
+    description = `At ${formatHour(h)}:${formatMinute(m)} on day ${d} of every month`;
+  }
+  // Case: */N for minutes with full other fields -> "Every N minutes"
+  else if (isStepOnly(rawMin, 0, 59) && hrFull && dayFull && monFull && wkFull) {
+    const step = getStepValue(rawMin);
+    description = `Every ${step} minute${step === 1 ? '' : 's'}`;
+  }
+  // Case: single minute, hour full -> "At minute M past every hour"
+  else if (minSingle && hrFull && dayFull && monFull && wkFull) {
+    const m = [...minutes][0];
+    description = `At minute ${m} past every hour`;
+  }
+  // Generic fallback
+  else {
+    let parts = [];
+
+    // Minute
+    if (minFull) {
+      parts.push('every minute');
+    } else if (minSingle) {
+      parts.push(`at minute ${[...minutes][0]}`);
+    } else if (isStepOnly(rawMin, 0, 59)) {
+      parts.push(`every ${getStepValue(rawMin)} minute${getStepValue(rawMin) === 1 ? '' : 's'}`);
+    } else {
+      parts.push(`at minutes ${[...minutes].sort((a,b)=>a-b).join(', ')}`);
+    }
+
+    // Hour
+    if (!hrFull) {
+      if (hrSingle) {
+        parts.push(`at ${formatHour([...hours][0])}:00`);
+      } else if (isStepOnly(rawHr, 0, 23)) {
+        parts.push(`every ${getStepValue(rawHr)} hour${getStepValue(rawHr) === 1 ? '' : 's'}`);
+      } else {
+        parts.push(`during hours ${[...hours].sort((a,b)=>a-b).join(', ')}`);
+      }
+    }
+
+    // Day of month
+    if (!dayFull) {
+      if (days.size === 1) {
+        parts.push(`on day ${[...days][0]} of the month`);
+      } else {
+        parts.push(`on days ${[...days].sort((a,b)=>a-b).join(', ')} of the month`);
+      }
+    }
+
+    // Month
+    if (!monFull) {
+      if (months.size === 1) {
+        parts.push(`in ${monthNames[[...months][0]]}`);
+      } else {
+        const ms = [...months].sort((a,b)=>a-b).map(m => monthNames[m]).join(', ');
+        parts.push(`in ${ms}`);
+      }
+    }
+
+    // Day of week
+    if (!wkFull) {
+      if (weekdays.size === 1) {
+        parts.push(`on ${dowNames[[...weekdays][0]]}`);
+      } else {
+        const ws = [...weekdays].sort((a,b)=>a-b).map(w => dowNames[w]).join(', ');
+        parts.push(`on ${ws}`);
+      }
+    }
+
+    description = parts.filter(p => p).join(', ');
+    if (description) {
+      description = description.charAt(0).toUpperCase() + description.slice(1);
+    }
+  }
+
+  output.textContent = description || 'Invalid cron expression';
+}
+
+function renderMarkdown() {
+  const input = document.getElementById('mdInput').value;
+  const output = document.getElementById('mdOutput');
+
+  function escapeHtml(text) {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  let text = escapeHtml(input);
+
+  const lines = text.split('\n');
+  const out = [];
+  let i = 0;
+
+  function processInline(s) {
+    // Must process in correct order. Inline code first to protect contents.
+    // 1. Inline code: `x`
+    const codeStash = [];
+    s = s.replace(/`([^`\n]+)`/g, function(m, c) {
+      const placeholder = `\x01CODE${codeStash.length}\x01`;
+      codeStash.push(c);
+      return placeholder;
+    });
+
+    // 2. Links: [text](url) — escape URL too for safety
+    const linkStash = [];
+    s = s.replace(/\[([^\]\n]+)\]\(([^\)\n]+)\)/g, function(m, txt, url) {
+      const safeUrl = url.replace(/"/g, '&quot;');
+      const placeholder = `\x01LINK${linkStash.length}\x01`;
+      linkStash.push(`<a href="${safeUrl}">${processInlineInner(txt)}</a>`);
+      return placeholder;
+    });
+
+    // 3. Bold: **x**
+    s = s.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+
+    // 4. Italic: *x*
+    s = s.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
+
+    // Restore code
+    s = s.replace(/\x01CODE(\d+)\x01/g, function(m, idx) {
+      return `<code>${codeStash[parseInt(idx, 10)]}</code>`;
+    });
+    // Restore links
+    s = s.replace(/\x01LINK(\d+)\x01/g, function(m, idx) {
+      return linkStash[parseInt(idx, 10)];
+    });
+
+    return s;
+  }
+
+  function processInlineInner(s) {
+    // For text inside links: just do bold/italic (no nested links)
+    s = s.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
+    return s;
+  }
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Fenced code block
+    if (/^```/.test(line)) {
+      const codeLines = [];
+      i++;
+      while (i < lines.length && !/^```/.test(lines[i])) {
+        codeLines.push(lines[i]);
+        i++;
+      }
+      i++; // skip closing fence
+      out.push('<pre><code>' + codeLines.join('\n') + '</code></pre>');
+      continue;
+    }
+
+    // Horizontal rule
+    if (/^---+\s*$/.test(line)) {
+      out.push('<hr>');
+      i++;
+      continue;
+    }
+
+    // Headings
+    const h3 = line.match(/^###\s+(.*)$/);
+    if (h3) {
+      out.push('<h3>' + processInline(h3[1]) + '</h3>');
+      i++;
+      continue;
+    }
+    const h2 = line.match(/^##\s+(.*)$/);
+    if (h2) {
+      out.push('<h2>' + processInline(h2[1]) + '</h2>');
+      i++;
+      continue;
+    }
+    const h1 = line.match(/^#\s+(.*)$/);
+    if (h1) {
+      out.push('<h1>' + processInline(h1[1]) + '</h1>');
+      i++;
+      continue;
+    }
+
+    // Blockquote
+    if (/^&gt;\s?/.test(line) || /^>\s?/.test(line)) {
+      const quoteLines = [];
+      while (i < lines.length && (/^&gt;\s?/.test(lines[i]) || /^>\s?/.test(lines[i]))) {
+        quoteLines.push(lines[i].replace(/^&gt;\s?/, '').replace(/^>\s?/, ''));
+        i++;
+      }
+      out.push('<blockquote>' + processInline(quoteLines.join(' ')) + '</blockquote>');
+      continue;
+    }
+
+    // Unordered list
+    if (/^-\s+(.*)$/.test(line)) {
+      const items = [];
+      while (i < lines.length && /^-\s+(.*)$/.test(lines[i])) {
+        items.push(processInline(lines[i].replace(/^-\s+/, '')));
+        i++;
+      }
+      out.push('<ul><li>' + items.join('</li><li>') + '</li></ul>');
+      continue;
+    }
+
+    // Ordered list
+    if (/^\d+\.\s+(.*)$/.test(line)) {
+      const items = [];
+      while (i < lines.length && /^\d+\.\s+(.*)$/.test(lines[i])) {
+        items.push(processInline(lines[i].replace(/^\d+\.\s+/, '')));
+        i++;
+      }
+      out.push('<ol><li>' + items.join('</li><li>') + '</li></ol>');
+      continue;
+    }
+
+    // Blank line
+    if (/^\s*$/.test(line)) {
+      i++;
+      continue;
+    }
+
+    // Paragraph: gather contiguous non-empty, non-special lines
+    const paraLines = [];
+    while (i < lines.length
+           && !/^\s*$/.test(lines[i])
+           && !/^```/.test(lines[i])
+           && !/^---+\s*$/.test(lines[i])
+           && !/^###\s+/.test(lines[i])
+           && !/^##\s+/.test(lines[i])
+           && !/^#\s+/.test(lines[i])
+           && !/^&gt;\s?/.test(lines[i]) && !/^>\s?/.test(lines[i])
+           && !/^-\s+/.test(lines[i])
+           && !/^\d+\.\s+/.test(lines[i])) {
+      paraLines.push(lines[i]);
+      i++;
+    }
+    if (paraLines.length > 0) {
+      const joined = paraLines.join(' ');
+      out.push('<p>' + processInline(joined) + '</p>');
+    }
+  }
+
+  output.innerHTML = out.join('\n');
+}
+</script>
+</body>
