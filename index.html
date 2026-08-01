@@ -98,10 +98,25 @@ h2{font-size:1.5rem;margin-bottom:20px;color:#4FC3F7;border-bottom:1px solid #0F
 <div id="three-container"></div>
 <header class="header">
 <svg width="34" height="34" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-label="DevTools logo" role="img" style="vertical-align:middle">
-  <defs><linearGradient id="dt-lg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4FC3F7"/><stop offset="50%" stop-color="#00A86B"/><stop offset="100%" stop-color="#81C784"/></linearGradient></defs>
-  <rect x="5" y="12" width="54" height="40" rx="4" fill="#0A1628" stroke="url(#dt-lg)" stroke-width="2.5"/>
-  <path d="M14 24l8 8-8 8M30 40h18" stroke="url(#dt-lg)" stroke-width="2.6" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-  <circle cx="10" cy="17" r="1.6" fill="url(#dt-lg)"/><circle cx="54" cy="47" r="1.6" fill="url(#dt-lg)"/>
+  <defs>
+    <linearGradient id="dt-lg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4FC3F7"/>
+      <stop offset="50%" stop-color="#2196F3"/>
+      <stop offset="100%" stop-color="#1565C0"/>
+    </linearGradient>
+    <filter id="dt-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1.2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <polygon points="32,4 56,18 56,46 32,60 8,46 8,18" fill="#080812" stroke="url(#dt-lg)" stroke-width="2.5" stroke-linejoin="round"/>
+  <polygon points="32,12 49,21 49,43 32,52 15,43 15,21" fill="none" stroke="url(#dt-lg)" stroke-width="1.2" stroke-opacity="0.55" stroke-linejoin="round"/>
+  <text x="32" y="38" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-weight="800" font-size="18" letter-spacing="0.5" fill="url(#dt-lg)" filter="url(#dt-glow)">DT</text>
+  <circle cx="32" cy="9" r="1.6" fill="url(#dt-lg)"/>
+  <circle cx="32" cy="55" r="1.6" fill="url(#dt-lg)"/>
 </svg> <div class="header-left">
 <span class="header-badge">v1.0</span>
 <h1 class="header-title">Developer Tools</h1>
